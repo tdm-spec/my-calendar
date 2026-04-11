@@ -10,6 +10,8 @@ import {
   QrCode, Type, AlignLeft, AlertTriangle
 } from 'lucide-react';
 
+import { createRoot } from 'react-dom/client';
+
 // --- КОНФИГУРАЦИЯ FIREBASE (ВАШИ ДАННЫЕ) ---
 const firebaseConfig = {
   apiKey: "AIzaSyCt2PZpHwvp3CCLUsuJgeZAyjrz3vdz7_A",
@@ -26,22 +28,16 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const APP_ID = 'learning-agenda-production'; 
 
+// --- Компонент фоновой графики ---
 const BackgroundGraphics = () => (
   <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden opacity-[0.04] select-none">
-    <style>{`
-      @keyframes float {
-        0% { transform: translateY(0px) rotate(12deg); }
-        50% { transform: translateY(-20px) rotate(15deg); }
-        100% { transform: translateY(0px) rotate(12deg); }
-      }
-      .animate-float { animation: float 15s ease-in-out infinite; }
-    `}</style>
     <Plane size={320} className="absolute -top-10 -right-20 text-slate-900 animate-float" />
     <Palmtree size={480} className="absolute -bottom-20 -left-20 text-slate-900" />
     <Globe size={200} className="absolute top-1/4 left-10 text-slate-900" />
   </div>
 );
 
+// --- Иконка события с анимацией при наведении ---
 const EventIcon = ({ name, size = 16, className = "" }) => {
   const icons = {
     flame: Flame, rocket: Rocket, 'book-open': BookOpen, info: Info,
@@ -50,10 +46,11 @@ const EventIcon = ({ name, size = 16, className = "" }) => {
     palmtree: Palmtree, luggage: Luggage, map: Map, mappin: MapPin
   };
   const IconComponent = icons[name] || Info;
-  return <IconComponent size={size} className={className} />;
+  // ШАГ 3 (ФИНАЛ): Добавлены классы для анимации при наведении на родительскую карточку
+  return <IconComponent size={size} className={`${className} transition-transform duration-300 group-hover:scale-125 group-hover:rotate-12`} />;
 };
 
-export default function App() {
+function App() {
   const [user, setUser] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [headerTitle, setHeaderTitle] = useState("ДАЙДЖЕСТ ОБУЧАЮЩИХ МЕРОПРИЯТИЙ");
@@ -238,15 +235,6 @@ export default function App() {
                     </div>
                   </div>
                 )}
-                {selectedEvent?.qrUrl && (
-                  <div className="flex flex-col items-center gap-4 py-6 border-t">
-                    {selectedEvent.qrLabel && <div className="px-4 py-1.5 bg-slate-100 rounded-full text-[10px] font-black text-slate-600 uppercase tracking-widest border">{selectedEvent.qrLabel}</div>}
-                    <div className="p-4 bg-white rounded-2xl shadow-lg border">
-                      <img src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(selectedEvent.qrUrl)}`} alt="QR" className="w-32 h-32 md:w-40 md:h-40" />
-                    </div>
-                    <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]"><QrCode size={14}/> Сканировать</div>
-                  </div>
-                )}
               </div>
             </div>
           </>
@@ -270,9 +258,10 @@ export default function App() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-4 md:gap-6 bg-slate-900 text-white p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] shadow-2xl">
+          {/* ШАГ 1 (ФИНАЛ): Добавлена центровка (justify-center) и ограничение ширины (max-w-xl), чтобы месяц не был таким большим */}
+          <div className="flex items-center justify-center gap-4 md:gap-6 bg-slate-900 text-white p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] shadow-2xl max-w-xl mx-auto">
             <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="hover:text-indigo-400 transition-colors"><ChevronLeft size={28}/></button>
-            <div className="flex-grow text-center">
+            <div className="text-center">
               <div className="text-xl md:text-2xl font-black uppercase tracking-[0.2em]">{monthNames[currentDate.getMonth()]}</div>
               <div className="text-[10px] opacity-30 font-bold tracking-[0.5em] mt-1">{currentDate.getFullYear()}</div>
             </div>
@@ -292,7 +281,8 @@ export default function App() {
               return (
                 <div key={dayKey} onClick={() => { setSelectedDayKey(dayKey); setImgError(false); }} className={`min-h-[80px] sm:min-h-[120px] md:min-h-[180px] p-2 md:p-6 border-r border-b border-slate-50 transition-all cursor-pointer relative group flex flex-col ${filled ? `bg-gradient-to-br ${types[event.type || 'standard']} text-white shadow-inner` : 'hover:bg-indigo-50/30'}`}>
                   <div className={`text-base md:text-2xl font-black leading-none mb-2 md:mb-3 ${filled ? 'opacity-30' : 'text-slate-200 group-hover:text-indigo-200'}`}>{day}</div>
-                  <div className="flex-grow text-[9px] md:text-[13px] font-bold leading-tight line-clamp-2 md:line-clamp-3 uppercase tracking-tight">{event?.title}</div>
+                  {/* ШАГ 2 (ФИНАЛ): Размер шрифта уменьшен на 2 (с text-9px до text-7px, и с text-13px до text-11px) */}
+                  <div className="flex-grow text-[7px] md:text-[11px] font-bold leading-tight line-clamp-2 md:line-clamp-3 uppercase tracking-tight">{event?.title}</div>
                   <div className="mt-1 md:mt-4 pt-1 md:pt-3 border-t border-white/10 flex items-center gap-1 md:gap-2">
                     <EventIcon name="clock" size={10} className={filled ? "opacity-40" : "text-slate-300"} />
                     <span className={`text-[8px] md:text-[10px] font-black tracking-wider ${filled ? 'opacity-70' : 'text-slate-400'}`}>{event?.time || '— : —'}</span>
@@ -303,29 +293,11 @@ export default function App() {
             })}
           </div>
         </div>
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-          {Object.entries(legend).map(([key, data]) => (
-            <div key={key} className="p-6 md:p-8 bg-white/70 backdrop-blur-md rounded-2xl md:rounded-3xl border border-slate-100 shadow-sm transition-all hover:bg-white hover:shadow-lg">
-              <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${types[key]} shadow-lg mb-4 flex items-center justify-center`}><div className="w-2 h-2 bg-white rounded-full animate-pulse" /></div>
-              {isAdmin ? (
-                <>
-                  <input value={String(data.label || '')} onChange={(e) => updateLegend(key, 'label', e.target.value)} className="w-full bg-transparent border-none text-base font-black text-slate-800 p-0 focus:ring-0 uppercase tracking-tight mb-1" />
-                  <textarea value={String(data.desc || '')} onChange={(e) => updateLegend(key, 'desc', e.target.value)} rows="2" className="w-full bg-transparent border-none text-xs text-slate-500 font-medium p-0 focus:ring-0 resize-none leading-relaxed" />
-                </>
-              ) : (
-                <>
-                  <div className="text-base font-black text-slate-800 uppercase tracking-tight mb-1">{String(data.label || '')}</div>
-                  <div className="text-xs text-slate-500 font-medium leading-relaxed">{String(data.desc || '')}</div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );
 }
-import { createRoot } from 'react-dom/client';
+
 const container = document.getElementById('root');
 const root = createRoot(container);
 root.render(<App />);
