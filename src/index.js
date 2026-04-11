@@ -204,6 +204,7 @@ function App() {
                     <div className="text-xl font-black text-slate-800 leading-tight uppercase tracking-tight">{selectedEvent?.title || 'Без названия'}</div>
                   )}
                 </div>
+
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400"><Clock size={12}/> Время</div>
                   {isAdmin ? (
@@ -212,6 +213,23 @@ function App() {
                     <div className="text-sm font-bold text-slate-600 bg-slate-50 px-4 py-2 rounded-xl inline-block">{selectedEvent?.time || '— : —'}</div>
                   )}
                 </div>
+
+                {/* Блок с описанием */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400"><AlignLeft size={12}/> Описание</div>
+                  {isAdmin ? (
+                    <textarea 
+                      value={selectedEvent?.description || ''} 
+                      onChange={(e) => updateEvent(selectedDayKey, 'description', e.target.value)} 
+                      placeholder="Добавьте подробности мероприятия..." 
+                      rows={4}
+                      className="w-full bg-slate-50 border-none rounded-xl p-4 text-sm font-medium focus:ring-2 focus:ring-indigo-500 resize-none" 
+                    />
+                  ) : (
+                    <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl">{selectedEvent?.description || 'Описание отсутствует.'}</div>
+                  )}
+                </div>
+
                 {selectedEvent?.linkUrl && (
                   <div className="pt-2">
                     <a href={selectedEvent.linkUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-3 w-full p-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all active:scale-95">
@@ -219,6 +237,7 @@ function App() {
                     </a>
                   </div>
                 )}
+
                 {isAdmin && (
                   <div className="p-5 md:p-6 bg-indigo-50/50 rounded-2xl md:rounded-3xl space-y-4 border border-indigo-100">
                     <div className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Настройки админа</div>
@@ -228,6 +247,17 @@ function App() {
                       <input value={selectedEvent?.qrUrl || ''} onChange={(e) => updateEvent(selectedDayKey, 'qrUrl', e.target.value)} placeholder="Ссылка QR..." className="w-full bg-white border border-indigo-100 rounded-xl p-3 text-[11px]" />
                       <input value={selectedEvent?.qrLabel || ''} onChange={(e) => updateEvent(selectedDayKey, 'qrLabel', e.target.value)} placeholder="Подпись QR..." className="w-full bg-white border border-indigo-100 rounded-xl p-3 text-[11px]" />
                     </div>
+                  </div>
+                )}
+
+                {/* Восстановленная генерация QR кода */}
+                {selectedEvent?.qrUrl && (
+                  <div className="flex flex-col items-center gap-4 py-6 border-t">
+                    {selectedEvent.qrLabel && <div className="px-4 py-1.5 bg-slate-100 rounded-full text-[10px] font-black text-slate-600 uppercase tracking-widest border">{selectedEvent.qrLabel}</div>}
+                    <div className="p-4 bg-white rounded-2xl shadow-lg border">
+                      <img src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(selectedEvent.qrUrl)}`} alt="QR" className="w-32 h-32 md:w-40 md:h-40" />
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]"><QrCode size={14}/> Сканировать</div>
                   </div>
                 )}
               </div>
@@ -255,7 +285,7 @@ function App() {
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row md:items-end gap-6 justify-between">
+          <div className="flex flex-col md:flex-row md:items-start gap-6 justify-between">
             {/* Название месяца слева под заголовком */}
             <div className="flex items-center gap-4 md:gap-6 bg-slate-900 text-white p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] shadow-2xl min-w-[280px]">
               <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="hover:text-indigo-400 transition-colors"><ChevronLeft size={28}/></button>
@@ -266,19 +296,33 @@ function App() {
               <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="hover:text-indigo-400 transition-colors"><ChevronRight size={28}/></button>
             </div>
 
-            {/* Легенда сверху справа (или просто над календарем) */}
-            <div className="flex flex-wrap gap-4">
+            {/* Легенда расширена, чтобы текст не обрезался */}
+            <div className="flex flex-wrap gap-4 items-start">
               {Object.entries(legend).map(([key, data]) => (
-                <div key={key} className="flex items-center gap-3 p-3 bg-white/50 backdrop-blur rounded-2xl border border-slate-100 shadow-sm">
-                  <div className={`w-3 h-3 rounded-full bg-gradient-to-br ${types[key]}`} />
+                <div key={key} className="flex flex-col gap-1.5 p-3.5 bg-white/60 backdrop-blur-md rounded-2xl border border-slate-100 shadow-sm min-w-[160px]">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3.5 h-3.5 rounded-full bg-gradient-to-br ${types[key]}`} />
+                    {isAdmin ? (
+                      <input 
+                        value={String(data.label || '')} 
+                        onChange={(e) => updateLegend(key, 'label', e.target.value)} 
+                        className="bg-transparent border-none text-[10px] font-black text-slate-800 p-0 focus:ring-0 uppercase tracking-tight w-full" 
+                        placeholder="Название..."
+                      />
+                    ) : (
+                      <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight">{String(data.label || '')}</span>
+                    )}
+                  </div>
                   {isAdmin ? (
-                    <input 
-                      value={String(data.label || '')} 
-                      onChange={(e) => updateLegend(key, 'label', e.target.value)} 
-                      className="bg-transparent border-none text-[10px] font-black text-slate-800 p-0 focus:ring-0 uppercase tracking-tight w-24" 
+                    <textarea 
+                      value={String(data.desc || '')} 
+                      onChange={(e) => updateLegend(key, 'desc', e.target.value)} 
+                      rows={2}
+                      className="bg-transparent border-none text-[9px] text-slate-500 font-medium p-0 focus:ring-0 resize-none leading-tight w-full"
+                      placeholder="Описание..."
                     />
                   ) : (
-                    <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight">{String(data.label || '')}</span>
+                    <span className="text-[9px] text-slate-500 font-medium leading-tight">{String(data.desc || '')}</span>
                   )}
                 </div>
               ))}
@@ -303,7 +347,6 @@ function App() {
                   <div className="flex justify-between items-start mb-2 md:mb-3">
                     <div className={`text-base md:text-2xl font-black leading-none ${filled ? 'opacity-30' : 'text-slate-200 group-hover:text-indigo-200'}`}>{day}</div>
                     
-                    {/* Восстановленная кастомизация прямо в карточке (только для админа) */}
                     {isAdmin && (
                       <div className="hidden group-hover:flex items-center gap-1 bg-white/10 p-1 rounded-lg backdrop-blur" onClick={(e) => e.stopPropagation()}>
                         <select 
@@ -339,7 +382,8 @@ function App() {
 
                   {filled && event.icon && (
                     <div className="absolute bottom-2 md:bottom-6 right-2 md:right-6 opacity-10">
-                      <EventIcon name={event.icon} size={48} />
+                      {/* Увеличен размер дополнительных иконок */}
+                      <EventIcon name={event.icon} size={64} />
                     </div>
                   )}
                 </div>
