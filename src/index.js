@@ -3,8 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { 
   getAuth, 
   onAuthStateChanged, 
-  signInAnonymously, 
-  signInWithCustomToken 
+  signInAnonymously 
 } from 'firebase/auth';
 import { 
   getFirestore, 
@@ -26,7 +25,6 @@ import {
   AlertCircle, 
   Star, 
   Target,
-  Trash2,
   Plane,
   Palmtree,
   Globe,
@@ -40,7 +38,6 @@ import {
   ExternalLink,
   Image as ImageIcon,
   QrCode,
-  Type,
   AlignLeft,
   AlertTriangle,
   Download
@@ -172,18 +169,15 @@ export default function App() {
     }
   };
 
-  // Функция экспорта отчета
   const exportMonthReport = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth() + 1;
     const currentMonthName = monthNames[currentDate.getMonth()];
     
-    // Собираем данные
     const csvRows = [
       ['Дата', 'Мероприятие', 'Время', 'Описание', 'Тип'].join(';')
     ];
 
-    // Фильтруем события по текущему месяцу и сортируем по дням
     const sortedDays = Object.keys(events)
       .filter(key => key.startsWith(`${year}-${month}-`))
       .sort((a, b) => parseInt(a.split('-')[2]) - parseInt(b.split('-')[2]));
@@ -198,7 +192,6 @@ export default function App() {
       const day = key.split('-')[2];
       const typeLabel = legend[event.type]?.label || 'Общее';
       
-      // Очищаем текст от кавычек и точек с запятой, чтобы не ломать CSV
       const cleanTitle = (event.title || '').replace(/[;"]/g, '');
       const cleanTime = (event.time || '').replace(/[;"]/g, '');
       const cleanDesc = (event.description || '').replace(/[;"]/g, '').replace(/\n/g, ' ');
@@ -206,7 +199,7 @@ export default function App() {
       csvRows.push([`${day}.${month}.${year}`, cleanTitle, cleanTime, cleanDesc, typeLabel].join(';'));
     });
 
-    const csvContent = "\uFEFF" + csvRows.join('\n'); // Добавляем BOM для корректного отображения кириллицы в Excel
+    const csvContent = "\uFEFF" + csvRows.join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
