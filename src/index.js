@@ -86,8 +86,7 @@ const EventIcon = ({ name, size = 16, className = "" }) => {
   return <IconComponent size={size} className={`${className} transition-transform duration-300 group-hover:scale-125 group-hover:rotate-12`} />;
 };
 
-// --- Основное приложение ---
-// Изменено на export default для корректной работы в Canvas
+// --- Основной компонент App (Export Default обязателен для Canvas) ---
 export default function App() {
   const [user, setUser] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -342,6 +341,7 @@ export default function App() {
           </div>
 
           <div className="flex flex-col md:flex-row md:items-start gap-6 justify-between">
+            {/* Название месяца слева */}
             <div className="flex items-center gap-4 md:gap-6 bg-slate-900 text-white p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] shadow-2xl min-w-[280px]">
               <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="hover:text-indigo-400 transition-colors"><ChevronLeft size={28}/></button>
               <div className="text-center flex-grow">
@@ -351,6 +351,7 @@ export default function App() {
               <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="hover:text-indigo-400 transition-colors"><ChevronRight size={28}/></button>
             </div>
 
+            {/* Легенда расширена */}
             <div className="flex flex-wrap gap-4 items-start">
               {Object.entries(legend).map(([key, data]) => (
                 <div key={key} className="flex flex-col gap-1.5 p-3.5 bg-white/60 backdrop-blur-md rounded-2xl border border-slate-100 shadow-sm min-w-[160px]">
@@ -413,3 +414,6 @@ export default function App() {
     </div>
   );
 }
+const container = document.getElementById('root');
+const root = createRoot(container);
+root.render(<App />);
