@@ -39,8 +39,7 @@ import {
   Image as ImageIcon,
   QrCode,
   AlignLeft,
-  AlertTriangle,
-  Download
+  AlertTriangle
 } from 'lucide-react';
 
 // --- Инициализация Firebase ---
@@ -88,6 +87,7 @@ const EventIcon = ({ name, size = 16, className = "" }) => {
 };
 
 // --- Основное приложение ---
+// Изменено на export default для корректной работы в Canvas
 export default function App() {
   const [user, setUser] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -103,7 +103,6 @@ export default function App() {
   const [selectedDayKey, setSelectedDayKey] = useState(null);
   const [imgError, setImgError] = useState(false);
   
-  // Секретный механизм восстановления
   const [clickCount, setClickCount] = useState(0);
   const [isEmergencyMode, setIsEmergencyMode] = useState(false);
 
@@ -167,47 +166,6 @@ export default function App() {
     } catch (e) {
       console.error("Save error:", e);
     }
-  };
-
-  const exportMonthReport = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth() + 1;
-    const currentMonthName = monthNames[currentDate.getMonth()];
-    
-    const csvRows = [
-      ['Дата', 'Мероприятие', 'Время', 'Описание', 'Тип'].join(';')
-    ];
-
-    const sortedDays = Object.keys(events)
-      .filter(key => key.startsWith(`${year}-${month}-`))
-      .sort((a, b) => parseInt(a.split('-')[2]) - parseInt(b.split('-')[2]));
-
-    if (sortedDays.length === 0) {
-      alert("В этом месяце пока нет мероприятий для отчета.");
-      return;
-    }
-
-    sortedDays.forEach(key => {
-      const event = events[key];
-      const day = key.split('-')[2];
-      const typeLabel = legend[event.type]?.label || 'Общее';
-      
-      const cleanTitle = (event.title || '').replace(/[;"]/g, '');
-      const cleanTime = (event.time || '').replace(/[;"]/g, '');
-      const cleanDesc = (event.description || '').replace(/[;"]/g, '').replace(/\n/g, ' ');
-
-      csvRows.push([`${day}.${month}.${year}`, cleanTitle, cleanTime, cleanDesc, typeLabel].join(';'));
-    });
-
-    const csvContent = "\uFEFF" + csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Отчет_обучение_${currentMonthName}_${year}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const handleHeaderClick = () => {
@@ -371,15 +329,6 @@ export default function App() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              {isAdmin && (
-                <button 
-                  onClick={exportMonthReport}
-                  className="px-4 py-2 rounded-xl text-xs font-bold uppercase bg-white text-indigo-600 border border-indigo-100 shadow-sm hover:bg-indigo-50 transition-all flex items-center gap-2 active:scale-95"
-                  title="Скачать отчет за месяц в CSV"
-                >
-                  <Download size={14} /> Отчет
-                </button>
-              )}
               {((!ownerId && isAdmin) || isEmergencyMode) && (
                 <button onClick={() => saveData({}, true)} className="px-4 py-2 rounded-xl text-xs font-bold uppercase bg-amber-500 text-white shadow-lg active:scale-95 transition-all flex items-center gap-2">
                   <UserCheck size={14} /> {isEmergencyMode ? "Вернуть доступ" : "Закрепить"}
