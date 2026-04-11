@@ -1,50 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
+import { getAuth, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
+import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { 
-  getAuth, 
-  onAuthStateChanged, 
-  signInAnonymously 
-} from 'firebase/auth';
-import { 
-  getFirestore, 
-  doc, 
-  setDoc, 
-  onSnapshot 
-} from 'firebase/firestore';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Clock, 
-  Flame, 
-  Rocket, 
-  BookOpen, 
-  Info, 
-  Mountain, 
-  Compass, 
-  Users, 
-  AlertCircle, 
-  Star, 
-  Target,
-  Trash2,
-  Plane,
-  Palmtree,
-  Globe,
-  Map,
-  Luggage,
-  MapPin,
-  Unlock,
-  Eye,
-  UserCheck,
-  X,
-  ExternalLink,
-  Image as ImageIcon,
-  QrCode,
-  Type,
-  AlignLeft,
-  AlertTriangle
+  ChevronLeft, ChevronRight, Clock, Flame, Rocket, BookOpen, 
+  Info, Mountain, Compass, Users, AlertCircle, Star, Target,
+  Trash2, Plane, Palmtree, Globe, Map, Luggage, MapPin,
+  Unlock, Eye, UserCheck, X, ExternalLink, Image as ImageIcon,
+  QrCode, Type, AlignLeft, AlertTriangle
 } from 'lucide-react';
 
-// --- КОНФИГУРАЦИЯ FIREBASE ---
+// --- КОНФИГУРАЦИЯ FIREBASE (ВАШИ ДАННЫЕ) ---
 const firebaseConfig = {
   apiKey: "AIzaSyCt2PZpHwvp3CCLUsuJgeZAyjrz3vdz7_A",
   authDomain: "calendar-705b1.firebaseapp.com",
@@ -60,7 +26,6 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const APP_ID = 'learning-agenda-production'; 
 
-// --- Компонент фоновой графики ---
 const BackgroundGraphics = () => (
   <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden opacity-[0.04] select-none">
     <style>{`
@@ -210,13 +175,9 @@ export default function App() {
   return (
     <div className="relative min-h-screen bg-slate-50 p-3 sm:p-8 font-sans text-slate-900 overflow-x-hidden">
       <BackgroundGraphics />
-      
-      {/* Затемняющая подложка для мобильных */}
       {selectedDayKey && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[90] md:hidden" onClick={() => setSelectedDayKey(null)} />
       )}
-
-      {/* Боковая панель */}
       <div className={`fixed inset-y-0 right-0 w-full md:w-[450px] bg-white shadow-2xl z-[100] transform transition-transform duration-500 ease-in-out flex flex-col ${selectedDayKey ? 'translate-x-0' : 'translate-x-full'}`}>
         {selectedDayKey && (
           <>
@@ -229,7 +190,6 @@ export default function App() {
               </div>
               <button onClick={() => { setSelectedDayKey(null); setImgError(false); }} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={24} /></button>
             </div>
-
             <div className="flex-grow overflow-y-auto p-5 md:p-6 space-y-8">
               <div className="relative">
                 {selectedEvent?.imageUrl && !imgError ? (
@@ -243,7 +203,6 @@ export default function App() {
                   )
                 )}
               </div>
-
               <div className="space-y-6">
                 <div className="space-y-2">
                   <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Название</div>
@@ -253,7 +212,6 @@ export default function App() {
                     <div className="text-xl font-black text-slate-800 leading-tight uppercase tracking-tight">{selectedEvent?.title || 'Без названия'}</div>
                   )}
                 </div>
-
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400"><Clock size={12}/> Время</div>
                   {isAdmin ? (
@@ -262,7 +220,6 @@ export default function App() {
                     <div className="text-sm font-bold text-slate-600 bg-slate-50 px-4 py-2 rounded-xl inline-block">{selectedEvent?.time || '— : —'}</div>
                   )}
                 </div>
-
                 {selectedEvent?.linkUrl && (
                   <div className="pt-2">
                     <a href={selectedEvent.linkUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-3 w-full p-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all active:scale-95">
@@ -270,19 +227,17 @@ export default function App() {
                     </a>
                   </div>
                 )}
-
                 {isAdmin && (
                   <div className="p-5 md:p-6 bg-indigo-50/50 rounded-2xl md:rounded-3xl space-y-4 border border-indigo-100">
                     <div className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Настройки админа</div>
                     <input value={selectedEvent?.imageUrl || ''} onChange={(e) => updateEvent(selectedDayKey, 'imageUrl', e.target.value)} placeholder="URL картинки..." className="w-full bg-white border border-indigo-100 rounded-xl p-3 text-[11px]" />
-                    <input value={selectedEvent?.linkUrl || ''} onChange={(e) => updateEvent(selectedDayKey, 'linkUrl', e.target.value)} placeholder="URL кнопки 'Подключиться'..." className="w-full bg-white border border-indigo-100 rounded-xl p-3 text-[11px]" />
+                    <input value={selectedEvent?.linkUrl || ''} onChange={(e) => updateEvent(selectedDayKey, 'linkUrl', e.target.value)} placeholder="URL ссылки..." className="w-full bg-white border border-indigo-100 rounded-xl p-3 text-[11px]" />
                     <div className="grid grid-cols-2 gap-3">
                       <input value={selectedEvent?.qrUrl || ''} onChange={(e) => updateEvent(selectedDayKey, 'qrUrl', e.target.value)} placeholder="Ссылка QR..." className="w-full bg-white border border-indigo-100 rounded-xl p-3 text-[11px]" />
                       <input value={selectedEvent?.qrLabel || ''} onChange={(e) => updateEvent(selectedDayKey, 'qrLabel', e.target.value)} placeholder="Подпись QR..." className="w-full bg-white border border-indigo-100 rounded-xl p-3 text-[11px]" />
                     </div>
                   </div>
                 )}
-
                 {selectedEvent?.qrUrl && (
                   <div className="flex flex-col items-center gap-4 py-6 border-t">
                     {selectedEvent.qrLabel && <div className="px-4 py-1.5 bg-slate-100 rounded-full text-[10px] font-black text-slate-600 uppercase tracking-widest border">{selectedEvent.qrLabel}</div>}
@@ -297,8 +252,6 @@ export default function App() {
           </>
         )}
       </div>
-
-      {/* Основной экран */}
       <div className={`max-w-[1440px] mx-auto transition-all duration-500 ${selectedDayKey ? 'md:mr-[450px] opacity-50 blur-[2px]' : ''}`}>
         <header className="mb-8 md:mb-12 flex flex-col gap-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -317,7 +270,6 @@ export default function App() {
               </div>
             </div>
           </div>
-
           <div className="flex items-center gap-4 md:gap-6 bg-slate-900 text-white p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] shadow-2xl">
             <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="hover:text-indigo-400 transition-colors"><ChevronLeft size={28}/></button>
             <div className="flex-grow text-center">
@@ -327,7 +279,6 @@ export default function App() {
             <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="hover:text-indigo-400 transition-colors"><ChevronRight size={28}/></button>
           </div>
         </header>
-
         <div className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100">
           <div className="grid grid-cols-7 border-b bg-slate-50/50">
             {weekDays.map(d => <div key={d} className="py-4 md:py-5 text-center text-[9px] md:text-[11px] font-black text-slate-400 tracking-[0.3em]">{d}</div>)}
@@ -351,6 +302,24 @@ export default function App() {
               );
             })}
           </div>
+        </div>
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+          {Object.entries(legend).map(([key, data]) => (
+            <div key={key} className="p-6 md:p-8 bg-white/70 backdrop-blur-md rounded-2xl md:rounded-3xl border border-slate-100 shadow-sm transition-all hover:bg-white hover:shadow-lg">
+              <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${types[key]} shadow-lg mb-4 flex items-center justify-center`}><div className="w-2 h-2 bg-white rounded-full animate-pulse" /></div>
+              {isAdmin ? (
+                <>
+                  <input value={String(data.label || '')} onChange={(e) => updateLegend(key, 'label', e.target.value)} className="w-full bg-transparent border-none text-base font-black text-slate-800 p-0 focus:ring-0 uppercase tracking-tight mb-1" />
+                  <textarea value={String(data.desc || '')} onChange={(e) => updateLegend(key, 'desc', e.target.value)} rows="2" className="w-full bg-transparent border-none text-xs text-slate-500 font-medium p-0 focus:ring-0 resize-none leading-relaxed" />
+                </>
+              ) : (
+                <>
+                  <div className="text-base font-black text-slate-800 uppercase tracking-tight mb-1">{String(data.label || '')}</div>
+                  <div className="text-xs text-slate-500 font-medium leading-relaxed">{String(data.desc || '')}</div>
+                </>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>
