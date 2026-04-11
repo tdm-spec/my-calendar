@@ -5,14 +5,14 @@ import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { 
   ChevronLeft, ChevronRight, Clock, Flame, Rocket, BookOpen, 
   Info, Mountain, Compass, Users, AlertCircle, Star, Target,
-  Trash2, Plane, Palmtree, Globe, Map, Luggage, MapPin,
+  Plane, Palmtree, Globe, Map, Luggage, MapPin,
   Unlock, Eye, UserCheck, X, ExternalLink, Image as ImageIcon,
   QrCode, Type, AlignLeft, AlertTriangle
 } from 'lucide-react';
 
 import { createRoot } from 'react-dom/client';
 
-// --- КОНФИГУРАЦИЯ FIREBASE (ВАШИ ДАННЫЕ) ---
+// --- КОНФИГУРАЦИЯ FIREBASE ---
 const firebaseConfig = {
   apiKey: "AIzaSyCt2PZpHwvp3CCLUsuJgeZAyjrz3vdz7_A",
   authDomain: "calendar-705b1.firebaseapp.com",
@@ -28,16 +28,14 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const APP_ID = 'learning-agenda-production'; 
 
-// --- Компонент фоновой графики ---
 const BackgroundGraphics = () => (
   <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden opacity-[0.04] select-none">
-    <Plane size={320} className="absolute -top-10 -right-20 text-slate-900 animate-float" />
+    <Plane size={320} className="absolute -top-10 -right-20 text-slate-900" />
     <Palmtree size={480} className="absolute -bottom-20 -left-20 text-slate-900" />
     <Globe size={200} className="absolute top-1/4 left-10 text-slate-900" />
   </div>
 );
 
-// --- Иконка события с анимацией при наведении ---
 const EventIcon = ({ name, size = 16, className = "" }) => {
   const icons = {
     flame: Flame, rocket: Rocket, 'book-open': BookOpen, info: Info,
@@ -46,7 +44,6 @@ const EventIcon = ({ name, size = 16, className = "" }) => {
     palmtree: Palmtree, luggage: Luggage, map: Map, mappin: MapPin
   };
   const IconComponent = icons[name] || Info;
-  // ШАГ 3 (ФИНАЛ): Добавлены классы для анимации при наведении на родительскую карточку
   return <IconComponent size={size} className={`${className} transition-transform duration-300 group-hover:scale-125 group-hover:rotate-12`} />;
 };
 
@@ -62,7 +59,6 @@ function App() {
   const [events, setEvents] = useState({});
   const [ownerId, setOwnerId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSyncing, setIsSyncing] = useState(false);
   const [selectedDayKey, setSelectedDayKey] = useState(null);
   const [imgError, setImgError] = useState(false);
 
@@ -106,7 +102,6 @@ function App() {
 
   const saveData = async (updates) => {
     if (!user || !isAdmin) return;
-    setIsSyncing(true);
     try {
       const docRef = doc(db, 'settings', APP_ID);
       const dataToSave = {
@@ -118,10 +113,8 @@ function App() {
       };
       await setDoc(docRef, dataToSave, { merge: true });
       if (!ownerId) setOwnerId(user.uid);
-      setTimeout(() => setIsSyncing(false), 500);
     } catch (e) {
       console.error("Ошибка сохранения:", e);
-      setIsSyncing(false);
     }
   };
 
@@ -175,6 +168,8 @@ function App() {
       {selectedDayKey && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[90] md:hidden" onClick={() => setSelectedDayKey(null)} />
       )}
+
+      {/* Сайдбар деталей */}
       <div className={`fixed inset-y-0 right-0 w-full md:w-[450px] bg-white shadow-2xl z-[100] transform transition-transform duration-500 ease-in-out flex flex-col ${selectedDayKey ? 'translate-x-0' : 'translate-x-full'}`}>
         {selectedDayKey && (
           <>
@@ -240,8 +235,9 @@ function App() {
           </>
         )}
       </div>
+
       <div className={`max-w-[1440px] mx-auto transition-all duration-500 ${selectedDayKey ? 'md:mr-[450px] opacity-50 blur-[2px]' : ''}`}>
-        <header className="mb-8 md:mb-12 flex flex-col gap-6">
+        <header className="mb-8 flex flex-col gap-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex-grow">
               {isAdmin ? (
@@ -258,16 +254,39 @@ function App() {
               </div>
             </div>
           </div>
-          {/* ШАГ 1 (ФИНАЛ): Добавлена центровка (justify-center) и ограничение ширины (max-w-xl), чтобы месяц не был таким большим */}
-          <div className="flex items-center justify-center gap-4 md:gap-6 bg-slate-900 text-white p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] shadow-2xl max-w-xl mx-auto">
-            <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="hover:text-indigo-400 transition-colors"><ChevronLeft size={28}/></button>
-            <div className="text-center">
-              <div className="text-xl md:text-2xl font-black uppercase tracking-[0.2em]">{monthNames[currentDate.getMonth()]}</div>
-              <div className="text-[10px] opacity-30 font-bold tracking-[0.5em] mt-1">{currentDate.getFullYear()}</div>
+
+          <div className="flex flex-col md:flex-row md:items-end gap-6 justify-between">
+            {/* Название месяца слева под заголовком */}
+            <div className="flex items-center gap-4 md:gap-6 bg-slate-900 text-white p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] shadow-2xl min-w-[280px]">
+              <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="hover:text-indigo-400 transition-colors"><ChevronLeft size={28}/></button>
+              <div className="text-center flex-grow">
+                <div className="text-xl md:text-2xl font-black uppercase tracking-[0.2em]">{monthNames[currentDate.getMonth()]}</div>
+                <div className="text-[10px] opacity-30 font-bold tracking-[0.5em] mt-1">{currentDate.getFullYear()}</div>
+              </div>
+              <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="hover:text-indigo-400 transition-colors"><ChevronRight size={28}/></button>
             </div>
-            <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="hover:text-indigo-400 transition-colors"><ChevronRight size={28}/></button>
+
+            {/* Легенда сверху справа (или просто над календарем) */}
+            <div className="flex flex-wrap gap-4">
+              {Object.entries(legend).map(([key, data]) => (
+                <div key={key} className="flex items-center gap-3 p-3 bg-white/50 backdrop-blur rounded-2xl border border-slate-100 shadow-sm">
+                  <div className={`w-3 h-3 rounded-full bg-gradient-to-br ${types[key]}`} />
+                  {isAdmin ? (
+                    <input 
+                      value={String(data.label || '')} 
+                      onChange={(e) => updateLegend(key, 'label', e.target.value)} 
+                      className="bg-transparent border-none text-[10px] font-black text-slate-800 p-0 focus:ring-0 uppercase tracking-tight w-24" 
+                    />
+                  ) : (
+                    <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight">{String(data.label || '')}</span>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </header>
+
+        {/* Сетка календаря */}
         <div className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100">
           <div className="grid grid-cols-7 border-b bg-slate-50/50">
             {weekDays.map(d => <div key={d} className="py-4 md:py-5 text-center text-[9px] md:text-[11px] font-black text-slate-400 tracking-[0.3em]">{d}</div>)}
@@ -280,14 +299,49 @@ function App() {
               const filled = event && (event.title || event.time);
               return (
                 <div key={dayKey} onClick={() => { setSelectedDayKey(dayKey); setImgError(false); }} className={`min-h-[80px] sm:min-h-[120px] md:min-h-[180px] p-2 md:p-6 border-r border-b border-slate-50 transition-all cursor-pointer relative group flex flex-col ${filled ? `bg-gradient-to-br ${types[event.type || 'standard']} text-white shadow-inner` : 'hover:bg-indigo-50/30'}`}>
-                  <div className={`text-base md:text-2xl font-black leading-none mb-2 md:mb-3 ${filled ? 'opacity-30' : 'text-slate-200 group-hover:text-indigo-200'}`}>{day}</div>
-                  {/* ШАГ 2 (ФИНАЛ): Размер шрифта уменьшен на 2 (с text-9px до text-7px, и с text-13px до text-11px) */}
-                  <div className="flex-grow text-[7px] md:text-[11px] font-bold leading-tight line-clamp-2 md:line-clamp-3 uppercase tracking-tight">{event?.title}</div>
+                  
+                  <div className="flex justify-between items-start mb-2 md:mb-3">
+                    <div className={`text-base md:text-2xl font-black leading-none ${filled ? 'opacity-30' : 'text-slate-200 group-hover:text-indigo-200'}`}>{day}</div>
+                    
+                    {/* Восстановленная кастомизация прямо в карточке (только для админа) */}
+                    {isAdmin && (
+                      <div className="hidden group-hover:flex items-center gap-1 bg-white/10 p-1 rounded-lg backdrop-blur" onClick={(e) => e.stopPropagation()}>
+                        <select 
+                          value={event?.icon || 'info'} 
+                          onChange={(e) => updateEvent(dayKey, 'icon', e.target.value)}
+                          className="bg-transparent border-none text-[8px] font-bold uppercase appearance-none cursor-pointer focus:ring-0 p-0 text-white"
+                        >
+                          {availableIcons.map(icon => <option key={icon} value={icon} className="text-slate-900">{icon}</option>)}
+                        </select>
+                        <div className="flex gap-1 border-l border-white/20 pl-1">
+                          {Object.keys(types).map(t => (
+                            <button 
+                              key={t} 
+                              onClick={() => updateEvent(dayKey, 'type', t)} 
+                              className={`w-2 h-2 rounded-full border border-white/20 ${types[t].split(' ')[0].replace('from-', 'bg-')}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-grow text-[7px] md:text-[11px] font-bold leading-tight line-clamp-2 md:line-clamp-3 uppercase tracking-tight">
+                    {event?.title}
+                  </div>
+
                   <div className="mt-1 md:mt-4 pt-1 md:pt-3 border-t border-white/10 flex items-center gap-1 md:gap-2">
                     <EventIcon name="clock" size={10} className={filled ? "opacity-40" : "text-slate-300"} />
-                    <span className={`text-[8px] md:text-[10px] font-black tracking-wider ${filled ? 'opacity-70' : 'text-slate-400'}`}>{event?.time || '— : —'}</span>
+                    <span className={`text-[8px] md:text-[10px] font-black tracking-wider ${filled ? 'opacity-70' : 'text-slate-400'}`}>
+                      {event?.time || '— : —'}
+                    </span>
                   </div>
-                  {filled && event.icon && <div className="absolute bottom-2 md:bottom-6 right-2 md:right-6 opacity-10"><EventIcon name={event.icon} size={48} /></div>}
+
+                  {filled && event.icon && (
+                    <div className="absolute bottom-2 md:bottom-6 right-2 md:right-6 opacity-10">
+                      <EventIcon name={event.icon} size={48} />
+                    </div>
+                  )}
                 </div>
               );
             })}
