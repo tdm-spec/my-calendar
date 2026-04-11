@@ -61,8 +61,12 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDayKey, setSelectedDayKey] = useState(null);
   const [imgError, setImgError] = useState(false);
+  
+  // Секретный механизм для восстановления доступа
+  const [clickCount, setClickCount] = useState(0);
+  const [isEmergencyMode, setIsEmergencyMode] = useState(false);
 
-  const isAdmin = !ownerId || (user && user.uid === ownerId);
+  const isAdmin = !ownerId || (user && user.uid === ownerId) || isEmergencyMode;
 
   const types = {
     standard: "from-indigo-900 to-violet-700",
@@ -100,21 +104,36 @@ function App() {
     return () => unsubscribe();
   }, [user]);
 
-  const saveData = async (updates) => {
-    if (!user || !isAdmin) return;
+  const saveData = async (updates, forceNewOwner = false) => {
+    if (!user || (!isAdmin && !forceNewOwner)) return;
     try {
       const docRef = doc(db, 'settings', APP_ID);
       const dataToSave = {
         headerTitle: updates.headerTitle !== undefined ? updates.headerTitle : headerTitle,
         legend: updates.legend !== undefined ? updates.legend : legend,
         events: updates.events !== undefined ? updates.events : events,
-        ownerId: ownerId || user.uid,
+        ownerId: forceNewOwner ? user.uid : (ownerId || user.uid),
         updatedAt: new Date().toISOString()
       };
       await setDoc(docRef, dataToSave, { merge: true });
-      if (!ownerId) setOwnerId(user.uid);
+      if (forceNewOwner || !ownerId) {
+        setOwnerId(user.uid);
+        setIsEmergencyMode(false);
+      }
     } catch (e) {
       console.error("Ошибка сохранения:", e);
+    }
+  };
+
+  const handleHeaderClick = () => {
+    const newCount = clickCount + 1;
+    if (newCount >= 5) {
+      setIsEmergencyMode(true);
+      setClickCount(0);
+    } else {
+      setClickCount(newCount);
+      // Сброс счетчика через 2 секунды бездействия
+      setTimeout(() => setClickCount(0), 2000);
     }
   };
 
@@ -214,7 +233,6 @@ function App() {
                   )}
                 </div>
 
-                {/* Блок с описанием */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400"><AlignLeft size={12}/> Описание</div>
                   {isAdmin ? (
@@ -250,7 +268,6 @@ function App() {
                   </div>
                 )}
 
-                {/* Восстановленная генерация QR кода */}
                 {selectedEvent?.qrUrl && (
                   <div className="flex flex-col items-center gap-4 py-6 border-t">
                     {selectedEvent.qrLabel && <div className="px-4 py-1.5 bg-slate-100 rounded-full text-[10px] font-black text-slate-600 uppercase tracking-widest border">{selectedEvent.qrLabel}</div>}
@@ -269,7 +286,7 @@ function App() {
       <div className={`max-w-[1440px] mx-auto transition-all duration-500 ${selectedDayKey ? 'md:mr-[450px] opacity-50 blur-[2px]' : ''}`}>
         <header className="mb-8 flex flex-col gap-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="flex-grow">
+            <div className="flex-grow cursor-pointer" onClick={handleHeaderClick}>
               {isAdmin ? (
                 <input value={headerTitle} onChange={(e) => { setHeaderTitle(e.target.value); saveData({ headerTitle: e.target.value }); }} className="bg-transparent border-none text-xl md:text-2xl font-black text-slate-800 uppercase tracking-tight focus:ring-0 p-0 w-full" />
               ) : (
@@ -277,7 +294,14 @@ function App() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              {!ownerId && isAdmin && <button onClick={() => saveData({})} className="px-4 py-2 rounded-xl text-xs font-bold uppercase bg-amber-500 text-white shadow-lg active:scale-95 transition-all"><UserCheck size={14} className="inline mr-1"/> Закрепить</button>}
+              {((!ownerId && isAdmin) || isEmergencyMode) && (
+                <button 
+                  onClick={() => saveData({}, true)} 
+                  className="px-4 py-2 rounded-xl text-xs font-bold uppercase bg-amber-500 text-white shadow-lg active:scale-95 transition-all flex items-center gap-2"
+                >
+                  <UserCheck size={14} /> {isEmergencyMode ? "Вернуть доступ" : "Закрепить"}
+                </button>
+              )}
               <div className={`px-4 py-2 rounded-xl text-xs font-bold uppercase border shadow-sm ${isAdmin ? 'bg-white text-indigo-600 border-indigo-100' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
                 {isAdmin ? <Unlock size={14} className="inline mr-1 text-indigo-400" /> : <Eye size={14} className="inline mr-1" />}
                 <span>{isAdmin ? "Редактор" : "Просмотр"}</span>
@@ -286,7 +310,6 @@ function App() {
           </div>
 
           <div className="flex flex-col md:flex-row md:items-start gap-6 justify-between">
-            {/* Название месяца слева под заголовком */}
             <div className="flex items-center gap-4 md:gap-6 bg-slate-900 text-white p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] shadow-2xl min-w-[280px]">
               <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="hover:text-indigo-400 transition-colors"><ChevronLeft size={28}/></button>
               <div className="text-center flex-grow">
@@ -296,7 +319,6 @@ function App() {
               <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="hover:text-indigo-400 transition-colors"><ChevronRight size={28}/></button>
             </div>
 
-            {/* Легенда расширена, чтобы текст не обрезался */}
             <div className="flex flex-wrap gap-4 items-start">
               {Object.entries(legend).map(([key, data]) => (
                 <div key={key} className="flex flex-col gap-1.5 p-3.5 bg-white/60 backdrop-blur-md rounded-2xl border border-slate-100 shadow-sm min-w-[160px]">
@@ -330,7 +352,6 @@ function App() {
           </div>
         </header>
 
-        {/* Сетка календаря */}
         <div className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100">
           <div className="grid grid-cols-7 border-b bg-slate-50/50">
             {weekDays.map(d => <div key={d} className="py-4 md:py-5 text-center text-[9px] md:text-[11px] font-black text-slate-400 tracking-[0.3em]">{d}</div>)}
@@ -382,7 +403,6 @@ function App() {
 
                   {filled && event.icon && (
                     <div className="absolute bottom-2 md:bottom-6 right-2 md:right-6 opacity-10">
-                      {/* Увеличен размер дополнительных иконок */}
                       <EventIcon name={event.icon} size={64} />
                     </div>
                   )}
