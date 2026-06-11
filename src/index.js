@@ -231,7 +231,7 @@ export default function App() {
       {/* Сайдбар деталей */}
       <div className={`fixed inset-y-0 right-0 w-full md:w-[450px] bg-white shadow-2xl z-[100] transform transition-transform duration-500 ease-in-out flex flex-col ${selectedDayKey ? 'translate-x-0' : 'translate-x-full'}`}>
         {selectedDayKey && (
-          <>
+          <>)}
             <div className="flex items-center justify-between p-5 md:p-6 border-b">
               <div className="flex flex-col">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Детали события</span>
