@@ -303,14 +303,14 @@ export default function App() {
                     </div>
                   </div>
                 )}
-                {selectedEvent?.qrUrl && (
+{selectedEvent?.qrUrl && (
   <div className="flex flex-col items-center gap-4 py-6 border-t">
     {selectedEvent.qrLabel && (
       <div className="px-4 py-1.5 bg-slate-100 rounded-full text-[10px] font-black text-slate-600 uppercase tracking-widest border">
         {selectedEvent.qrLabel}
       </div>
     )}
-    
+
     <a
       href={selectedEvent.qrUrl}
       target="_blank"
@@ -339,6 +339,7 @@ export default function App() {
       </span>
     </div>
   </div>
+)}
       <div className={`max-w-[1440px] mx-auto transition-all duration-500 ${selectedDayKey ? 'md:mr-[450px] opacity-50 blur-[2px]' : ''}`}>
         <header className="mb-8 flex flex-col gap-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
