@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { createRoot } from 'react-dom/client'; // Добавлен обязательный импорт для работы на хостинге
+import { createRoot } from 'react-dom/client';
 import { initializeApp } from 'firebase/app';
 import { 
   getAuth, 
@@ -231,7 +231,7 @@ export default function App() {
       {/* Сайдбар деталей */}
       <div className={`fixed inset-y-0 right-0 w-full md:w-[450px] bg-white shadow-2xl z-[100] transform transition-transform duration-500 ease-in-out flex flex-col ${selectedDayKey ? 'translate-x-0' : 'translate-x-full'}`}>
         {selectedDayKey && (
-          <>)}
+          <>
             <div className="flex items-center justify-between p-5 md:p-6 border-b">
               <div className="flex flex-col">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Детали события</span>
@@ -303,43 +303,50 @@ export default function App() {
                     </div>
                   </div>
                 )}
-{selectedEvent?.qrUrl && (
-  <div className="flex flex-col items-center gap-4 py-6 border-t">
-    {selectedEvent.qrLabel && (
-      <div className="px-4 py-1.5 bg-slate-100 rounded-full text-[10px] font-black text-slate-600 uppercase tracking-widest border">
-        {selectedEvent.qrLabel}
-      </div>
-    )}
 
-    <a
-      href={selectedEvent.qrUrl}
-      target="_blank"
-      rel="noreferrer"
-      className="flex flex-col items-center gap-3 group"
-      aria-label="Открыть ссылку или отсканировать QR-код"
-    >
-      <div className="relative p-4 bg-white rounded-2xl border-2 border-slate-200 transition-all duration-200 group-hover:border-indigo-500 group-hover:scale-[1.03] group-hover:shadow-[0_6px_24px_rgba(99,102,241,0.15)]">
-        <div className="absolute inset-[-4px] rounded-[20px] border-2 border-indigo-400 opacity-0 scale-100 group-hover:opacity-0 animate-[qrpulse_2.5s_ease-in-out_infinite]" />
-        <img
-          src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(selectedEvent.qrUrl)}`}
-          alt="QR-код"
-          className="w-36 h-36 md:w-40 md:h-40 block rounded-sm"
-        />
-      </div>
-      <div className="flex items-center gap-1.5 text-[9px] font-black text-indigo-400 uppercase tracking-[0.15em]">
-        <ExternalLink size={12} />
-        Нажмите чтобы открыть
-      </div>
-    </a>
+                {selectedEvent?.qrUrl && (
+                  <div className="flex flex-col items-center gap-4 py-6 border-t">
+                    {selectedEvent.qrLabel && (
+                      <div className="px-4 py-1.5 bg-slate-100 rounded-full text-[10px] font-black text-slate-600 uppercase tracking-widest border">
+                        {selectedEvent.qrLabel}
+                      </div>
+                    )}
 
-    <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-2.5">
-      <QrCode size={20} className="text-indigo-400 flex-shrink-0" />
-      <span className="text-[10px] font-bold text-indigo-600 leading-snug">
-        Нажмите на код чтобы открыть ссылку,<br />или отсканируйте камерой телефона
-      </span>
-    </div>
-  </div>
-)}
+                    <a
+                      href={selectedEvent.qrUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex flex-col items-center gap-3 group"
+                      aria-label="Открыть ссылку или отсканировать QR-код"
+                    >
+                      <div className="relative p-4 bg-white rounded-2xl border-2 border-slate-200 transition-all duration-200 group-hover:border-indigo-500 group-hover:scale-[1.03] group-hover:shadow-[0_6px_24px_rgba(99,102,241,0.15)]">
+                        <div className="absolute inset-[-4px] rounded-[20px] border-2 border-indigo-400 opacity-0 scale-100 group-hover:opacity-0 animate-[qrpulse_2.5s_ease-in-out_infinite]" />
+                        <img
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(selectedEvent.qrUrl)}`}
+                          alt="QR-код"
+                          className="w-36 h-36 md:w-40 md:h-40 block rounded-sm"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[9px] font-black text-indigo-400 uppercase tracking-[0.15em]">
+                        <ExternalLink size={12} />
+                        Нажмите чтобы открыть
+                      </div>
+                    </a>
+
+                    <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-2.5">
+                      <QrCode size={20} className="text-indigo-400 flex-shrink-0" />
+                      <span className="text-[10px] font-bold text-indigo-600 leading-snug">
+                        Нажмите на код чтобы открыть ссылку,<br />или отсканируйте камерой телефона
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
       <div className={`max-w-[1440px] mx-auto transition-all duration-500 ${selectedDayKey ? 'md:mr-[450px] opacity-50 blur-[2px]' : ''}`}>
         <header className="mb-8 flex flex-col gap-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -435,6 +442,7 @@ export default function App() {
     </div>
   );
 }
+
 const container = document.getElementById('root');
 const root = createRoot(container);
 root.render(<App />);
